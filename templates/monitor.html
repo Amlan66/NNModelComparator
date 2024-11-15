@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MNIST Training Monitor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>MNIST CNN Training Monitor</h1>
+        
+        <div class="training-status">
+            <h2>Training Status</h2>
+            <p>Epoch: <span id="epoch">-</span></p>
+            <p>Training Loss: <span id="train-loss">-</span></p>
+            <p>Validation Accuracy: <span id="val-acc">-</span></p>
+        </div>
+
+        <div class="loss-plot">
+            <img id="loss-plot" src="" alt="Loss Plot">
+        </div>
+
+        <div class="test-results" style="display: none;">
+            <h2>Test Results</h2>
+            <div id="test-images"></div>
+            <h2>Confusion Matrix</h2>
+            <div id="confusion-matrix"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('epoch').textContent = data.epoch;
+                    document.getElementById('train-loss').textContent = data.train_loss.toFixed(4);
+                    document.getElementById('val-acc').textContent = (data.val_acc * 100).toFixed(2) + '%';
+                    document.getElementById('loss-plot').src = '/plot?' + new Date().getTime();
+                    
+                    if (data.training_complete) {
+                        document.querySelector('.test-results').style.display = 'block';
+                        document.getElementById('test-images').innerHTML = data.test_results;
+                        document.getElementById('confusion-matrix').innerHTML = 
+                            `<img src="data:image/png;base64,${data.confusion_matrix}">`;
+                        clearInterval(intervalId);
+                    }
+                });
+        }
+
+        const intervalId = setInterval(updateStatus, 1000);
+    </script>
+</body>
+</html> 
