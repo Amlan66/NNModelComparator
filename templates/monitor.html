@@ -23,7 +23,7 @@
             <h2>Test Results</h2>
             <div id="test-images"></div>
             <h2>Confusion Matrix</h2>
-            <div id="confusion-matrix"></div>
+            <div id="confusion-matrix" class="confusion-matrix"></div>
         </div>
     </div>
 
@@ -41,7 +41,7 @@
                         document.querySelector('.test-results').style.display = 'block';
                         document.getElementById('test-images').innerHTML = data.test_results;
                         document.getElementById('confusion-matrix').innerHTML = 
-                            `<img src="data:image/png;base64,${data.confusion_matrix}">`;
+                            `<img src="data:image/png;base64,${data.confusion_matrix}" alt="Confusion Matrix">`;
                         clearInterval(intervalId);
                     }
                 });
