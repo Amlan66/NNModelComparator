@@ -8,22 +8,79 @@
     <div class="container">
         <h1>MNIST CNN Training Monitor</h1>
         
+        <div class="model-configs">
+            <div class="config-box">
+                <h3>Model Architecture Comparison</h3>
+                <table class="config-table">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>32-64 Model</th>
+                        <th>8-8 Model</th>
+                    </tr>
+                    <tr>
+                        <td>Architecture</td>
+                        <td>1 → 32 → 64 → 64 → 32</td>
+                        <td>1 → 8 → 8 → 8 → 8</td>
+                    </tr>
+                    <tr>
+                        <td>Number of Epochs</td>
+                        <td>2</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Batch Size</td>
+                        <td>128</td>
+                        <td>64</td>
+                    </tr>
+                    <tr>
+                        <td>Optimizer</td>
+                        <td>Adam</td>
+                        <td>SGD with momentum</td>
+                    </tr>
+                    <tr>
+                        <td>Learning Rate</td>
+                        <td>0.001</td>
+                        <td>0.01</td>
+                    </tr>
+                    <tr>
+                        <td>Additional Params</td>
+                        <td>β1=0.9, β2=0.999</td>
+                        <td>momentum=0.9</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
         <div class="training-status">
-            <h2>Training Status</h2>
-            <p>Epoch: <span id="epoch">-</span></p>
-            <p>Training Loss: <span id="train-loss">-</span></p>
-            <p>Validation Accuracy: <span id="val-acc">-</span></p>
+            <div class="model-status">
+                <h3>Phase 1: 32-64 Model</h3>
+                <div class="status-details">
+                    <p>Progress: <span id="epoch-32">-</span>/2 epochs</p>
+                    <p>Training Loss: <span id="train-loss-32">-</span></p>
+                    <p>Validation Accuracy: <span id="val-acc-32">-</span></p>
+                </div>
+            </div>
+            <div class="model-status">
+                <h3>Phase 2: 8-8 Model</h3>
+                <div class="status-details">
+                    <p>Progress: <span id="epoch-8">-</span>/1 epoch</p>
+                    <p>Training Loss: <span id="train-loss-8">-</span></p>
+                    <p>Validation Accuracy: <span id="val-acc-8">-</span></p>
+                </div>
+            </div>
         </div>
 
         <div class="loss-plot">
-            <img id="loss-plot" src="" alt="Loss Plot">
+            <h2>Training Progress</h2>
+            <img id="comparison-plot" src="" alt="Model Comparison">
         </div>
 
         <div class="test-results" style="display: none;">
-            <h2>Test Results</h2>
-            <div id="test-images"></div>
-            <h2>Confusion Matrix</h2>
-            <div id="confusion-matrix" class="confusion-matrix"></div>
+            <h2>Final Results</h2>
+            <div class="confusion-matrices">
+                <h3>Confusion Matrices</h3>
+                <img id="confusion-matrices" src="" alt="Confusion Matrices">
+            </div>
         </div>
     </div>
 
@@ -32,16 +89,33 @@
             fetch('/status')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('epoch').textContent = data.epoch;
-                    document.getElementById('train-loss').textContent = data.train_loss.toFixed(4);
-                    document.getElementById('val-acc').textContent = (data.val_acc * 100).toFixed(2) + '%';
-                    document.getElementById('loss-plot').src = '/plot?' + new Date().getTime();
+                    // Update model32 status
+                    if (data.model32) {
+                        document.getElementById('epoch-32').textContent = data.model32.epoch;
+                        document.getElementById('train-loss-32').textContent = 
+                            data.model32.train_loss ? data.model32.train_loss.toFixed(4) : '-';
+                        document.getElementById('val-acc-32').textContent = 
+                            data.model32.val_acc ? `${(data.model32.val_acc * 100).toFixed(2)}%` : '-';
+                    }
+
+                    // Update model8 status
+                    if (data.model8) {
+                        document.getElementById('epoch-8').textContent = data.model8.epoch;
+                        document.getElementById('train-loss-8').textContent = 
+                            data.model8.train_loss ? data.model8.train_loss.toFixed(4) : '-';
+                        document.getElementById('val-acc-8').textContent = 
+                            data.model8.val_acc ? `${(data.model8.val_acc * 100).toFixed(2)}%` : '-';
+                    }
+
+                    // Update plots
+                    document.getElementById('comparison-plot').src = '/plot?' + new Date().getTime();
                     
                     if (data.training_complete) {
                         document.querySelector('.test-results').style.display = 'block';
-                        document.getElementById('test-images').innerHTML = data.test_results;
-                        document.getElementById('confusion-matrix').innerHTML = 
-                            `<img src="data:image/png;base64,${data.confusion_matrix}" alt="Confusion Matrix">`;
+                        if (data.confusion_matrices) {
+                            document.getElementById('confusion-matrices').src = 
+                                `data:image/png;base64,${data.confusion_matrices}`;
+                        }
                         clearInterval(intervalId);
                     }
                 });
